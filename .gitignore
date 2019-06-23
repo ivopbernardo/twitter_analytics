@@ -1,0 +1,6 @@
+#Ignore documents
+*.xlsx
+*.pptx
+
+#Ignore subfolders
+**/

@@ -12,6 +12,7 @@ Python 3.6 or upper with the following packages:
 - re
 - string
 - pandas
+- nltk
 
 ## Current Scripts
 

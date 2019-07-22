@@ -11,6 +11,10 @@ import pandas as pd
 import time
 import traceback
 import os
+from nltk.corpus import stopwords
+
+#Set stop words
+stop_words = set(stopwords.words('english')) 
 
 #Keys for Twitter API 
 ckey='YOUR CKEY'
@@ -26,12 +30,13 @@ def read_text_files(file):
     for line in f:
         list_of_words.append(line)
     
-    list_of_words = list(map(lambda s: s.strip(), list_of_words))
+    list_of_words = list(map(
+        lambda s: s.strip(), list_of_words)
+    )
     list_of_words = list_of_words[31:]
     return list_of_words
 
 #Text Data for Sentiment Analysis - Positive and Negative Words
-os.chdir(r'C:\Users\ivopb\Google Drive\Other Projects\Apresentação Business Analytics UCP\Script with Auth')
 pos_words = read_text_files('positive-words.txt')
 neg_words = read_text_files('negative-words.txt')
 
@@ -44,11 +49,9 @@ def remove_pattern(input_txt, pattern):
         
     return input_txt  
 
-#Empty tweet_list and sentiment list assignment
 tweets_list = []
 sents = []
 
-#Attribute color to tweet according to sentiment distribution, for each Neutral, Negative, Positive combination
 def dataframe_assign_colors(table):
     if len(table.Sentiment.str.get_dummies().sum().index) == 1:
         if (table.Sentiment.str.get_dummies().sum().index)[0] == "Neutral":
@@ -74,7 +77,6 @@ def dataframe_assign_colors(table):
         table.Sentiment.str.get_dummies().sum().plot.pie(label=company+ ' Twitter Sentiment', autopct='%1.0f%%', startangle=90,
         colors = ['#ff9999','#d6e2d5','#99ff99'] )        
 
-#Get tweet and sentiment by tweet filtering the words with the 'word' parameter
 class listener(StreamListener):
     def on_status(self, status):
         try:
@@ -116,7 +118,6 @@ class listener(StreamListener):
     def on_error(self, status):
         print (status)
 
-#Using authentication parameters to get twitter data and using the Stream from tweepy to get real time tweets
 auth = OAuthHandler(ckey, csecret)
 auth.set_access_token(atoken, asecret)
 twitterStream = Stream(auth, listener(), tweet_mode='extended')

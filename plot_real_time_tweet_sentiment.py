@@ -1,17 +1,15 @@
-from tweepy import Stream
-from tweepy import OAuthHandler
-from tweepy.streaming import StreamListener
 import json
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from nltk.corpus import stopwords
 import numpy as np
+import os
+import pandas as pd
 import re
 import string
-import pandas as pd
-import time
 import traceback
-import os
-from nltk.corpus import stopwords
+from tweepy import OAuthHandler, Stream
+from tweepy.streaming import StreamListener
 
 #Set stop words
 stop_words = set(stopwords.words('english')) 
@@ -24,7 +22,8 @@ asecret= 'YOUR ASECRET'
 
 company = input("Hello! Which company do you want to check? \n")
 
-def read_text_files(file):
+def read_text_files(file: str) -> list:
+    ''' Reads text files for positive and negative words'''
     list_of_words = []
     
     with open(file, 'r') as f:
@@ -41,9 +40,8 @@ def read_text_files(file):
 pos_words = read_text_files('positive-words.txt')
 neg_words = read_text_files('negative-words.txt')
 
-#Function for Handling Tweet
-
-def remove_pattern(input_txt, pattern):
+#Function for Handling Tweet and Clean Pattern
+def remove_pattern(input_txt: str, pattern: str) -> str: 
     r = re.findall(pattern, input_txt)
     for i in r:
         input_txt = re.sub(i, '', input_txt)
@@ -53,7 +51,8 @@ def remove_pattern(input_txt, pattern):
 tweets_list = []
 sents = []
 
-def dataframe_assign_colors(table):
+def dataframe_assign_colors(table: pd.DataFrame):
+    '''Assigns colors to Neutral, Negative and Positive sentiment plot - Probably there is a cleaner way to do this'''
     if len(table.Sentiment.str.get_dummies().sum().index) == 1:
         if (table.Sentiment.str.get_dummies().sum().index)[0] == "Neutral":
                 table.Sentiment.str.get_dummies().sum().plot.pie(label=company+ ' Twitter Sentiment', autopct='%1.0f%%',startangle=90,
@@ -86,12 +85,15 @@ class listener(StreamListener):
                 text_tweet = status.extended_tweet['full_text']
             except:
                 text_tweet = status.text
+            #Pre-Processing phase, remove retweets and user mentions - also retain only characters or numbers
             new_tweet = str((np.vectorize(remove_pattern)(text_tweet, "@[\w]*")))
             new_tweet=re.sub(r'[^A-Za-z0-9]+', ' ', new_tweet)
-            new_tweet = new_tweet.replace("RT", "")                          
+            new_tweet = new_tweet.replace("RT", "")   
+            #Split tweet into a list, remove stop words and lowercase all characters                       
             tokenized_tweet = new_tweet.split()
             tokenized_tweet = [x for x in tokenized_tweet if x not in stop_words]
             tokenized_tweet = list(map(lambda s:s.lower(),tokenized_tweet))
+            #Lookup number of positive and negative words and compute score
             nb_pos_words = [x for x in tokenized_tweet if x in pos_words]
             nb_neg_words = [x for x in tokenized_tweet if x in neg_words]
             score = len(nb_pos_words)-len(nb_neg_words)
@@ -103,8 +105,10 @@ class listener(StreamListener):
                 sentiment = "Negative"
             tweets_list.append(text_tweet)
             sents.append(sentiment)
+            #Create new dataframe from the list of tweets and sentiment 
             tweets_df = pd.DataFrame({'Tweets':tweets_list, 'Sentiment':sents})
             tweets_df.to_csv(company+'.csv')
+            #Plot pie chart for every 20 tweets
             if len(tweets_df) in np.arange(10,1100,20):
                 print(tweets_df)
                 plt.figure()
@@ -114,7 +118,7 @@ class listener(StreamListener):
                 plt.close('all') 
             return True
         except BaseException as e:
-            print (e)
+            print(e)
             print(traceback.format_exc())
     def on_error(self, status):
         print (status)

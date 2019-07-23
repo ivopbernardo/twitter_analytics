@@ -26,9 +26,10 @@ company = input("Hello! Which company do you want to check? \n")
 
 def read_text_files(file):
     list_of_words = []
-    f = open(file)
-    for line in f:
-        list_of_words.append(line)
+    
+    with open(file, 'r') as f:
+        for line in f:
+            list_of_words.append(line)
     
     list_of_words = list(map(
         lambda s: s.strip(), list_of_words)

@@ -2,18 +2,6 @@
 
 The current project provides some script for twitter data analytics
 
-### Prerequisites
-
-Python 3.6 or upper with the following packages:
-- tweepy
-- json
-- matplotlib
-- numpy
-- re
-- string
-- pandas
-- nltk
-
 ## Current Scripts
 
 plot_real_time_tweet_sentiment.py
